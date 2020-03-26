@@ -36,6 +36,6 @@ public final class Task {
 
     @Override
     public String toString() {
-        return "(" + job +", " + task + '}';
+        return "(" + job +", " + task + ')';
     }
 }

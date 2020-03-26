@@ -1,6 +1,7 @@
 package jobshop;
 
 import jobshop.encodings.JobNumbers;
+import jobshop.encodings.ResourceOrder;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -27,11 +28,12 @@ public class DebuggingMain {
             System.out.println("\nENCODING: " + enc);
 
             Schedule sched = enc.toSchedule();
-            // TODO: make it print something meaningful
-            // by implementing the toString() method
             System.out.println("SCHEDULE: " + sched);
             System.out.println("VALID: " + sched.isValid());
             System.out.println("MAKESPAN: " + sched.makespan());
+
+            ResourceOrder res = new ResourceOrder(sched.pb, sched);
+            System.out.println("Resource order " + res);
 
         } catch (IOException e) {
             e.printStackTrace();
