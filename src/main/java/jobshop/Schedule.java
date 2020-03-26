@@ -63,4 +63,17 @@ public class Schedule {
     public Schedule copy() {
         return new Schedule(this.pb, this.times);
     }
+
+    @Override
+    public String toString() {
+        String result = "";
+        for (int j = 0; j < pb.numJobs; j++){
+            result += ("Job n" + j + "\n");
+            for (int i = 0; i < pb.numTasks; i++){
+                result += ("Tache n" + i + ", debut : " + times[j][i] + "\n");
+            }
+            result += "\n";
+        }
+        return result;
+    }
 }
