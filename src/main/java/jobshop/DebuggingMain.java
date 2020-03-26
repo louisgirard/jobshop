@@ -35,6 +35,9 @@ public class DebuggingMain {
             ResourceOrder res = new ResourceOrder(sched.pb, sched);
             System.out.println("Resource order " + res);
 
+            sched = res.toSchedule();
+            System.out.println("SCHEDULE: " + sched);
+
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);

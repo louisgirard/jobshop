@@ -23,6 +23,12 @@ public class JobNumbers extends Encoding {
         Arrays.fill(jobs, -1);
     }
 
+    public JobNumbers(Instance instance, Schedule sched) {
+        super(instance);
+
+        jobs = new int[instance.numJobs * instance.numMachines];
+    }
+
     @Override
     public Schedule toSchedule() {
         // time at which each machine is going to be freed
