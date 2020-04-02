@@ -30,8 +30,6 @@ public class DebuggingMain {
 
             Schedule sched = enc.toSchedule();
             System.out.println("SCHEDULE: " + sched);
-            System.out.println("VALID: " + sched.isValid());
-            System.out.println("MAKESPAN: " + sched.makespan());
 
             ResourceOrder res = new ResourceOrder(sched.pb);
             res.fromSchedule(sched);
@@ -40,8 +38,16 @@ public class DebuggingMain {
             sched = res.toSchedule();
             System.out.println("SCHEDULE: " + sched);
 
-            GreedySolver greedySolver = new GreedySolver(GreedySolver.Priority.LPT);
-            Result result = greedySolver.solve(instance,10);
+            // TEST SOLVEUR
+            System.out.println("----------Test Greedy Solveur----------");
+            Instance inst = Instance.fromFile(Paths.get("instances/ft06"));
+            GreedySolver greedySolver = new GreedySolver(GreedySolver.Priority.LRPT);
+            Result result = greedySolver.solve(inst,10);
+
+            System.out.println("Greedy solver: " + result.schedule);;
+            System.out.println("makespan: " + result.schedule.makespan());
+
+
 
         } catch (IOException e) {
             e.printStackTrace();
