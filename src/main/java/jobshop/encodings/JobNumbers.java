@@ -23,10 +23,8 @@ public class JobNumbers extends Encoding {
         Arrays.fill(jobs, -1);
     }
 
-    public JobNumbers(Instance instance, Schedule sched) {
-        super(instance);
-
-        jobs = new int[instance.numJobs * instance.numMachines];
+    public void fromSchedule(Schedule sched){
+        //A FAIRE
     }
 
     @Override

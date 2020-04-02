@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 public class ResourceOrder {
     public final Instance instance;
-    Task[][] matrixTask;
+    public Task[][] matrixTask;
     public Schedule sched;
 
     public ResourceOrder(Instance instance){
@@ -22,8 +22,7 @@ public class ResourceOrder {
         }
     }
 
-    public ResourceOrder(Instance instance, Schedule sched){
-        this.instance = instance;
+    public void fromSchedule(Schedule sched){
         this.matrixTask = new Task[instance.numMachines][instance.numJobs];
         this.sched = sched;
 
@@ -54,11 +53,12 @@ public class ResourceOrder {
 
         ArrayList<Task> scheduledTasks = new ArrayList<>();
 
-        ArrayList<Task> executableTasks = new ArrayList<>();
+        ArrayList<Task> executableTasks;
 
         int[][] startTimes = new int[instance.numJobs][instance.numTasks];
 
-        for(int i = 0; i < (instance.numTasks * instance.numJobs); i++){
+        //on s'arrete quand toutes les taches sont scheduled
+        while(scheduledTasks.size() != (instance.numJobs * instance.numTasks)){
             //identification des taches executables
             executableTasks = executableTasks(scheduledTasks);
             //recuperation de la premiere tache executable
@@ -71,16 +71,12 @@ public class ResourceOrder {
             }else{
                 est = (startTimes[t.job][t.task - 1] + instance.duration(t.job,t.task-1));
             }
-            est = Math.max(est, nextFreeTimeResource[machine]);
-
-            startTimes[t.job][t.task] = est;
+            startTimes[t.job][t.task] = Math.max(est, nextFreeTimeResource[machine]);
             nextFreeTimeResource[machine] = est + instance.duration(t.job, t.task);
 
             //task scheduled
             scheduledTasks.add(t);
-
         }
-
         return new Schedule(instance, startTimes);
     }
 
@@ -89,37 +85,19 @@ public class ResourceOrder {
         //parcourt de toutes les taches
         for(int m=0; m < instance.numMachines; m++){
             for(int j=0; j < instance.numJobs; j++){
-                // deux conditions a verifier : predecesseur sur le job schedule et predecesseur sur la ressource (ligne machine)
-                //tache numero 0, uniquement la deuxieme condition a verifier
+                // deux conditions a verifier : predecesseur sur le job scheduled et predecesseur sur la ressource (ligne machine) scheduled
+                //si la tache est deja scheduled alors elle n'est pas executable
                 if(!scheduledTasks.contains(matrixTask[m][j])){
-                    if(matrixTask[m][j].task == 0){
-                        //premiere tache de la ressource, executable
-                        if(j == 0){
+                    //tache numero 0 ou predecesseur scheduled, deuxieme condition a verifier
+                    if(matrixTask[m][j].task == 0 || scheduledTasks.contains(new Task(matrixTask[m][j].job, matrixTask[m][j].task - 1))){
+                        //premiere tache de la ressource ou predecesseur scheduled, executable
+                        if(j == 0 || scheduledTasks.contains(matrixTask[m][j-1])){
                             executableTasks.add(matrixTask[m][j]);
-                        }else{
-                            if(scheduledTasks.contains(matrixTask[m][j-1])){
-                                executableTasks.add(matrixTask[m][j]);
-                            }
-                        }
-                    }else{
-                        //verification premiere condition
-                        if(scheduledTasks.contains(new Task(matrixTask[m][j].job, matrixTask[m][j].task - 1))){
-                            //verification deuxieme condition
-                            if(j == 0){
-                                executableTasks.add(matrixTask[m][j]);
-                            }else{
-                                if(scheduledTasks.contains(matrixTask[m][j-1])){
-                                    executableTasks.add(matrixTask[m][j]);
-                                }
-                            }
                         }
                     }
                 }
             }
-
-
         }
-
         return executableTasks;
     }
 

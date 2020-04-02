@@ -2,6 +2,7 @@ package jobshop;
 
 import jobshop.encodings.JobNumbers;
 import jobshop.encodings.ResourceOrder;
+import jobshop.solvers.GreedySolver;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -32,11 +33,15 @@ public class DebuggingMain {
             System.out.println("VALID: " + sched.isValid());
             System.out.println("MAKESPAN: " + sched.makespan());
 
-            ResourceOrder res = new ResourceOrder(sched.pb, sched);
-            System.out.println("Resource order " + res);
+            ResourceOrder res = new ResourceOrder(sched.pb);
+            res.fromSchedule(sched);
+            System.out.println("Resource order from schedule " + res);
 
             sched = res.toSchedule();
             System.out.println("SCHEDULE: " + sched);
+
+            GreedySolver greedySolver = new GreedySolver(GreedySolver.Priority.LPT);
+            Result result = greedySolver.solve(instance,10);
 
         } catch (IOException e) {
             e.printStackTrace();
