@@ -39,7 +39,7 @@ public class DebuggingMain {
 
             // TEST SOLVEUR
             System.out.println("----------Test Greedy Solver----------");
-            Instance inst = Instance.fromFile(Paths.get("instances/ft20"));
+            Instance inst = Instance.fromFile(Paths.get("instances/ft06"));
             for (GreedySolver.Priority pr : GreedySolver.Priority.values()){
                 GreedySolver greedySolver = new GreedySolver(pr);
                 Result result = greedySolver.solve(inst,10);
