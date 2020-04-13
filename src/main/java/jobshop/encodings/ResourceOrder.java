@@ -1,49 +1,52 @@
 package jobshop.encodings;
 
+import jobshop.Encoding;
 import jobshop.Instance;
 import jobshop.Schedule;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.stream.IntStream;
 
-public class ResourceOrder {
-    public final Instance instance;
+public class ResourceOrder extends Encoding {
     public Task[][] matrixTask;
+    // for each machine, indicate on many tasks have been initialized
+    public final int[] nextFreeSlot;
     public Schedule sched;
 
     public ResourceOrder(Instance instance){
-        this.instance = instance;
-        this.matrixTask = new Task[instance.numMachines][instance.numJobs];
-        for(int m =0; m < instance.numMachines; m++){
-            for(int j=0; j < instance.numJobs; j++){
-                matrixTask[m][j] = new Task(-1,-1);
-            }
-        }
+        super(instance);
+
+        // matrix of null elements (null is the default value of objects)
+        matrixTask = new Task[instance.numMachines][instance.numJobs];
+
+        // no task scheduled on any machine (0 is the default value)
+        nextFreeSlot = new int[instance.numMachines];
     }
 
-    public void fromSchedule(Schedule sched){
-        this.matrixTask = new Task[instance.numMachines][instance.numJobs];
-        this.sched = sched;
+    /** Creates a resource order from a schedule. */
+    public ResourceOrder(Schedule schedule)
+    {
+        super(schedule.pb);
+        Instance pb = schedule.pb;
 
-        for(int m =0; m < instance.numMachines; m++){
-            for(int j=0; j < instance.numJobs; j++){
-                matrixTask[m][j] = new Task(j,instance.task_with_machine(j,m));
-            }
-            sortByStartTime(matrixTask,m);
-        }
-    }
+        this.matrixTask = new Task[pb.numMachines][];
+        this.nextFreeSlot = new int[instance.numMachines];
 
-    private void sortByStartTime(Task[][] matrixTask, int m){
-        int n = instance.numJobs;
-        for (int i = 0; i < n-1; i++) {
-            for (int j = 0; j < n - i - 1; j++) {
-                if (sched.startTime(j, matrixTask[m][j].task) > sched.startTime(j + 1, matrixTask[m][j + 1].task)) {
-                    Task temp = matrixTask[m][j];
-                    matrixTask[m][j] = matrixTask[m][j + 1];
-                    matrixTask[m][j + 1] = temp;
-                }
-            }
+        for(int m = 0 ; m<schedule.pb.numMachines ; m++) {
+            final int machine = m;
+
+            // for thi machine, find all tasks that are executed on it and sort them by their start time
+            matrixTask[m] =
+                    IntStream.range(0, pb.numJobs) // all job numbers
+                            .mapToObj(j -> new Task(j, pb.task_with_machine(j, machine))) // all tasks on this machine (one per job)
+                            .sorted(Comparator.comparing(t -> schedule.startTime(t.job, t.task))) // sorted by start time
+                            .toArray(Task[]::new); // as new array and store in tasksByMachine
+
+            // indicate that all tasks have been initialized for machine m
+            nextFreeSlot[m] = instance.numJobs;
         }
     }
 
@@ -99,6 +102,11 @@ public class ResourceOrder {
             }
         }
         return executableTasks;
+    }
+
+    /** Creates an exact copy of this resource order. */
+    public ResourceOrder copy() {
+        return new ResourceOrder(this.toSchedule());
     }
 
     @Override

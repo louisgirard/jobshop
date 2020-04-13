@@ -31,21 +31,24 @@ public class DebuggingMain {
             Schedule sched = enc.toSchedule();
             System.out.println("SCHEDULE: " + sched);
 
-            ResourceOrder res = new ResourceOrder(sched.pb);
-            res.fromSchedule(sched);
+            ResourceOrder res = new ResourceOrder(sched);
             System.out.println("Resource order from schedule " + res);
 
             sched = res.toSchedule();
             System.out.println("SCHEDULE: " + sched);
 
             // TEST SOLVEUR
-            System.out.println("----------Test Greedy Solveur----------");
-            Instance inst = Instance.fromFile(Paths.get("instances/ft06"));
-            GreedySolver greedySolver = new GreedySolver(GreedySolver.Priority.LRPT);
-            Result result = greedySolver.solve(inst,10);
+            System.out.println("----------Test Greedy Solver----------");
+            Instance inst = Instance.fromFile(Paths.get("instances/ft20"));
+            for (GreedySolver.Priority pr : GreedySolver.Priority.values()){
+                GreedySolver greedySolver = new GreedySolver(pr);
+                Result result = greedySolver.solve(inst,10);
 
-            System.out.println("Greedy solver: " + result.schedule);;
-            System.out.println("makespan: " + result.schedule.makespan());
+                //System.out.println("Greedy solver: " + result.schedule);;
+                System.out.println("Greedy solver " + pr);
+                System.out.println("makespan: " + result.schedule.makespan());
+
+            }
 
 
 

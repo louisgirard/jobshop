@@ -23,7 +23,7 @@ public class GreedySolver implements Solver {
         ResourceOrder sol = new ResourceOrder(instance);
         ArrayList<Task> feasibleTasks = new ArrayList<Task>();
         ArrayList<Task> realisees = new ArrayList<>();
-        int numMatrice = 0;
+        int numMachine = 0;
         int numTask = 0;
 
         //init
@@ -32,15 +32,15 @@ public class GreedySolver implements Solver {
         }
         //boucle
         while(feasibleTasks.size() != 0){
-            //choisir la tache, au debut on prend la premiere tache
-            //Task t = feasibleTasks.get(0);
+            //choisir la tache
             Task t = taskSelection(feasibleTasks,realisees,instance);
             //placer la tache sur la premiere ressource libre
-            sol.matrixTask[numMatrice][numTask] = t;
-            numTask = (numTask + 1) % instance.numJobs; // colonne suivante dans la matrice
-            if (numTask == 0)
-                numMatrice++; // ligne suivante dans la matrice si on est revenu a la colonne 0
-
+            numMachine = instance.machine(t.job,t.task);
+            numTask = 0;
+            while(sol.matrixTask[numMachine][numTask] != null){ // si colonne vide alors on avance voir la case suivante
+                numTask++;
+            }
+            sol.matrixTask[numMachine][numTask] = t;
             //mettre a jour les taches realisables
             realisees.add(t);
             feasibleTasks = feasibleTasks(realisees, instance);
@@ -128,7 +128,7 @@ public class GreedySolver implements Solver {
                 break;
             }
         }
-        System.out.println("duree min restante / job / tache : " + min + " / " + job + " / " + taskMin);
+        //System.out.println("duree min restante / job / tache : " + min + " / " + job + " / " + taskMin);
         return taskMin;
     }
     private Task taskSelectionLRPT(ArrayList<Task> feasibleTasks, ArrayList<Task> realisees, Instance instance){
