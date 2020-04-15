@@ -2,10 +2,14 @@ package jobshop;
 
 import jobshop.encodings.JobNumbers;
 import jobshop.encodings.ResourceOrder;
+import jobshop.solvers.DescentSolver;
 import jobshop.solvers.GreedySolver;
+import sun.jvm.hotspot.opto.Block;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DebuggingMain {
 
@@ -49,6 +53,11 @@ public class DebuggingMain {
                 System.out.println("makespan: " + result.schedule.makespan());
 
             }
+            // TEST SOLVEUR
+            System.out.println("----------Test Descent Solver----------");
+            Instance instance1 = Instance.fromFile(Paths.get("instances/aaa1"));
+            DescentSolver descentSolver = new DescentSolver();
+            Result result = descentSolver.solve(instance1,10);
 
 
 
