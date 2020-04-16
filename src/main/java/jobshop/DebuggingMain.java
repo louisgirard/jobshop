@@ -48,7 +48,6 @@ public class DebuggingMain {
                 GreedySolver greedySolver = new GreedySolver(pr);
                 Result result = greedySolver.solve(inst,10);
 
-                //System.out.println("Greedy solver: " + result.schedule);;
                 System.out.println("Greedy solver " + pr);
                 System.out.println("makespan: " + result.schedule.makespan());
 
@@ -59,6 +58,9 @@ public class DebuggingMain {
             DescentSolver descentSolver = new DescentSolver();
             Result result = descentSolver.solve(instance1,10);
 
+            System.out.println("Descent solver ");
+            System.out.println(result.schedule);
+            System.out.println("makespan: " + result.schedule.makespan());
 
 
         } catch (IOException e) {

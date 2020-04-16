@@ -83,19 +83,29 @@ public class DescentSolver implements Solver {
 
     @Override
     public Result solve(Instance instance, long deadline) {
-        ResourceOrder res = new ResourceOrder(instance);
-        res.matrixTask[0][0] = new Task(0,0);
-        res.matrixTask[0][1] = new Task(1,1);
-        res.matrixTask[1][0] = new Task(1,0);
-        res.matrixTask[1][1] = new Task(0,1);
-        res.matrixTask[2][0] = new Task(0,2);
-        res.matrixTask[2][1] = new Task(1,2);
-        List<Block> blocks = blocksOfCriticalPath(res);
+        //Init
+        Schedule solution = new GreedySolver(GreedySolver.Priority.SPT).solve(instance,deadline).schedule;
+        Schedule bestSolution = solution;
+        int objectif = bestSolution.makespan();
+        List<Block> blocks = blocksOfCriticalPath(new ResourceOrder(bestSolution));
+
+        //Boucle
+        //recherche du meilleur voisin
         for(Block b : blocks){
-            System.out.println("Block, machine : " + b.machine + ", first task : " + b.firstTask + ", last task : " + b.lastTask);
-            neighbors(b).get(0).applyOn(res);
+            List<Swap> voisins = neighbors(b);
+            for(Swap swap : voisins){
+                // voisin de la meilleure solution
+                ResourceOrder voisin = new ResourceOrder(bestSolution);
+                swap.applyOn(voisin);
+                // si l'objectif est meilleur
+                if(voisin.toSchedule().makespan() < objectif){
+                    objectif = voisin.toSchedule().makespan();
+                    bestSolution = voisin.toSchedule();
+                }
+            }
         }
-        return new Result(instance, res.toSchedule(), Result.ExitCause.Timeout);
+
+        return new Result(instance, bestSolution, Result.ExitCause.Timeout);
     }
 
     /** Returns a list of all blocks of the critical path. */
