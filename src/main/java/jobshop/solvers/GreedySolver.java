@@ -15,6 +15,12 @@ public class GreedySolver implements Solver {
 
     private Priority pr;
 
+    // indicate for each task its start time
+    int [][] startTimes;
+
+    // for each machine, earliest time at which the machine can be used
+    int[] releaseTimeOfMachine;
+
     public GreedySolver(Priority pr){
         this.pr = pr;
     }
@@ -24,6 +30,13 @@ public class GreedySolver implements Solver {
         ResourceOrder sol = new ResourceOrder(instance);
         ArrayList<Task> feasibleTasks = new ArrayList<Task>();
         ArrayList<Task> realisees = new ArrayList<Task>();
+
+        // indicate for each task its start time
+        startTimes = new int [instance.numJobs][instance.numTasks];
+
+        // for each machine, earliest time at which the machine can be used
+        releaseTimeOfMachine = new int[instance.numMachines];
+
         int numMachine = 0;
         int numTask = 0;
 
@@ -35,6 +48,7 @@ public class GreedySolver implements Solver {
         while(feasibleTasks.size() != 0){
             //choisir la tache
             Task t = taskSelection(feasibleTasks,realisees,instance);
+            releaseTimeOfMachine[instance.machine(t.job,t.task)] = startTimes[t.job][t.task] + instance.duration(t.job, t.task);
             //placer la tache sur la premiere ressource libre
             numMachine = instance.machine(t.job,t.task);
             numTask = 0;
@@ -113,7 +127,7 @@ public class GreedySolver implements Solver {
         int min = Integer.MAX_VALUE;
         int dureeJob = 0;
         int job = -1;
-        Task taskMin = new Task(-1,-1);
+        Task taskMin = null;
         //recherche du job avec la plus petite duree de taches restantes
         for (Task task : feasibleTasks){
             int j = task.job;
@@ -141,7 +155,7 @@ public class GreedySolver implements Solver {
         int max = Integer.MIN_VALUE;
         int dureeJob = 0;
         int job = -1;
-        Task taskMax = new Task(-1,-1);
+        Task taskMax = null;
         //recherche du job avec la plus petite duree de taches restantes
         for (Task task : feasibleTasks){
             int j = task.job;
@@ -177,23 +191,19 @@ public class GreedySolver implements Solver {
     private ArrayList<Task> estTasks(ArrayList<Task> feasibleTasks, Instance instance){
         ArrayList<Task> estFeasibleTasks = new ArrayList<Task>();
 
-        // indicate for each task that have been scheduled, its start time
-        int [][] startTimes = new int [instance.numJobs][instance.numTasks];
-        // for each machine, earliest time at which the machine can be used
-        int[] releaseTimeOfMachine = new int[instance.numMachines];
-
         int bestEst = Integer.MAX_VALUE;
         //calcul des est et recherche du meilleur
         for (Task t : feasibleTasks){
             int machine = instance.machine(t.job, t.task);
-
             // compute the earliest start time (est) of the task
-            int est = t.task == 0 ? 0 : startTimes[t.job][t.task-1] + instance.duration(t.job, t.task-1);
+            int est;
+            if(t.task == 0){
+                est = 0;
+            } else{
+                est = startTimes[t.job][t.task-1] + instance.duration(t.job, t.task-1);
+            }
             est = Math.max(est, releaseTimeOfMachine[machine]);
             startTimes[t.job][t.task] = est;
-
-            // increase the release time of the machine
-            releaseTimeOfMachine[machine] = est + instance.duration(t.job, t.task);
 
             if (est < bestEst){
                 bestEst = est;
