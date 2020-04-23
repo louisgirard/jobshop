@@ -14,7 +14,7 @@ import java.util.List;
 public class DebuggingMain {
 
     public static void main(String[] args) {
-        try {
+        try {/*
             // load the aaa1 instance
             Instance instance = Instance.fromFile(Paths.get("instances/aaa1"));
 
@@ -52,15 +52,19 @@ public class DebuggingMain {
                 System.out.println("makespan: " + result.schedule.makespan());
 
             }
+            */
+
             // TEST SOLVEUR
             System.out.println("----------Test Descent Solver----------");
             Instance instance1 = Instance.fromFile(Paths.get("instances/aaa1"));
             DescentSolver descentSolver = new DescentSolver();
+            long debut = System.currentTimeMillis();
             Result result = descentSolver.solve(instance1,10);
 
             System.out.println("Descent solver ");
             System.out.println(result.schedule);
             System.out.println("makespan: " + result.schedule.makespan());
+            System.out.println("Temps exec : " + (System.currentTimeMillis()-debut));
 
 
         } catch (IOException e) {

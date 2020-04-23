@@ -86,77 +86,43 @@ public class DescentSolver implements Solver {
         //Init
         Schedule solution = new GreedySolver(GreedySolver.Priority.SPT).solve(instance,deadline).schedule;
         Schedule bestSolution = solution;
-        int objectif = bestSolution.makespan();
-        List<Block> blocks = blocksOfCriticalPath(new ResourceOrder(bestSolution));
+        List<Voisinage.Block> blocks = Voisinage.blocksOfCriticalPath(new ResourceOrder(bestSolution));
+        ResourceOrder bestVoisin = null;
 
         //Boucle
         //recherche du meilleur voisin
-        for(Block b : blocks){
-            List<Swap> voisins = neighbors(b);
-            for(Swap swap : voisins){
+        for(Voisinage.Block b : blocks){
+            List<Voisinage.Swap> voisins = Voisinage.neighbors(b);
+            for(Voisinage.Swap swap : voisins){
                 // voisin de la meilleure solution
                 ResourceOrder voisin = new ResourceOrder(bestSolution);
                 swap.applyOn(voisin);
+                Schedule voisinSched = voisin.toSchedule();
                 // si l'objectif est meilleur
-                if(voisin.toSchedule().makespan() < objectif){
-                    objectif = voisin.toSchedule().makespan();
-                    bestSolution = voisin.toSchedule();
+                if(bestVoisin == null){
+                    bestVoisin = voisin.copy();
+                }else{
+                    if(voisinSched != null && obj(voisinSched) < obj(bestVoisin)){
+                        bestVoisin = voisin.copy();
+                    }
                 }
+            }
+            // fin de parcours des voisins, on a le meilleur
+            if(obj(bestVoisin) < obj(bestSolution)){
+                bestSolution = bestVoisin.toSchedule();
+                bestVoisin = null;
             }
         }
 
         return new Result(instance, bestSolution, Result.ExitCause.Timeout);
     }
 
-    /** Returns a list of all blocks of the critical path. */
-    List<Block> blocksOfCriticalPath(ResourceOrder order) {
-        ArrayList<Block> blocks = new ArrayList<Block>();
-        Schedule sched = order.toSchedule();
-        List<Task> criticalPath = sched.criticalPath();
-
-        int debut = -1;
-        int nbTask = 0;
-
-        //parcourt du chemin critique
-        for(int m = 0; m < order.instance.numMachines; m++){
-            for(int t = 0; t < order.instance.numJobs; t++){
-                if (criticalPath.contains(order.matrixTask[m][t])){
-                    if (nbTask == 0){
-                        debut = t;
-                    }
-                    nbTask++;
-                }else{
-                    //si on tombe sur une tache qui n'est pas dans le critical path mais qu'il y avait plus de
-                    // 2 taches avant qui y etaient alors on a un block
-                    if(nbTask >= 2){
-                        blocks.add(new Block(m,debut,t-1));
-                    }
-                    debut = -1;
-                    nbTask = 0;
-                }
-            }
-            //si la derniere tache de la ligne pouvait faire un bloc
-            if(nbTask >= 2){
-                blocks.add(new Block(m,debut,order.instance.numJobs - 1));
-            }
-            debut = -1;
-            nbTask = 0;
-        }
-        return blocks;
+    private int obj(ResourceOrder order){
+        return order.toSchedule().makespan();
     }
 
-    /** For a given block, return the possible swaps for the Nowicki and Smutnicki neighborhood */
-    List<Swap> neighbors(Block block) {
-        ArrayList<Swap> voisins = new ArrayList<Swap>();
-        //si uniquement 2 taches
-        if((block.lastTask - block.firstTask) == 1){
-            voisins.add(new Swap(block.machine, block.firstTask, block.lastTask));
-        }else
-        {
-            voisins.add(new Swap(block.machine, block.firstTask, block.firstTask + 1));
-            voisins.add(new Swap(block.machine, block.lastTask - 1, block.lastTask));
-        }
-        return voisins;
+    private int obj(Schedule sched){
+        return sched.makespan();
     }
 
 }
