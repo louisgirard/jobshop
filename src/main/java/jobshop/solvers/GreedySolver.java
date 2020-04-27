@@ -29,7 +29,6 @@ public class GreedySolver implements Solver {
     public Result solve(Instance instance, long deadline) {
         ResourceOrder sol = new ResourceOrder(instance);
         ArrayList<Task> feasibleTasks = new ArrayList<Task>();
-        ArrayList<Task> realisees = new ArrayList<Task>();
 
         // indicate for each task its start time
         startTimes = new int [instance.numJobs][instance.numTasks];
@@ -47,7 +46,7 @@ public class GreedySolver implements Solver {
         //boucle
         while(feasibleTasks.size() != 0){
             //choisir la tache
-            Task t = taskSelection(feasibleTasks,realisees,instance);
+            Task t = taskSelection(feasibleTasks,instance);
             releaseTimeOfMachine[instance.machine(t.job,t.task)] = startTimes[t.job][t.task] + instance.duration(t.job, t.task);
             //placer la tache sur la premiere ressource libre
             numMachine = instance.machine(t.job,t.task);
@@ -57,29 +56,24 @@ public class GreedySolver implements Solver {
             }
             sol.matrixTask[numMachine][numTask] = t;
             //mettre a jour les taches realisables
-            realisees.add(t);
-            feasibleTasks = feasibleTasks(realisees, instance);
+            updatefeasibleTasks(t,feasibleTasks,instance);
         }
         Schedule best = sol.toSchedule();
         return new Result(instance,best,Result.ExitCause.Timeout);
     }
 
-    private ArrayList<Task> feasibleTasks(ArrayList<Task> realisees, Instance instance){
-        ArrayList<Task> feasibleTasks = new ArrayList<>();
-        //parcourt de toutes les taches
-        for(int t=0; t < instance.numTasks; t++){
-            for(int j=0; j < instance.numJobs; j++) {
-                if (!realisees.contains(new Task(j,t))){ // si la tache n est pas deja realisee
-                    if(t == 0 || realisees.contains(new Task(j, t - 1))){
-                        feasibleTasks.add(new Task(j,t));
-                    }
-                }
-            }
+    private void updatefeasibleTasks(Task task, ArrayList<Task> feasibleTasks, Instance instance){
+        //si on n'est pas sur la derniere tache alors on remplace par la suivante
+        if (task.task != (instance.numTasks - 1)){
+            //feasibleTasks.add(new Task(task.job,task.task + 1));
+            feasibleTasks.set(feasibleTasks.indexOf(task),new Task(task.job,task.task + 1));
+        }else{// sinon on la supprime
+            feasibleTasks.remove(task);
+
         }
-        return feasibleTasks;
     }
 
-    private Task taskSelection(ArrayList<Task> feasibleTasks, ArrayList<Task> realisees, Instance instance){
+    private Task taskSelection(ArrayList<Task> feasibleTasks, Instance instance){
         switch (this.pr){
             case SPT:
                 return taskSelectionSPT(feasibleTasks, instance);
@@ -88,11 +82,11 @@ public class GreedySolver implements Solver {
             case LPT:
                 return taskSelectionLPT(feasibleTasks, instance);
             case SRPT:
-                return taskSelectionSRPT(feasibleTasks, realisees, instance); //besoin des taches realisees pour savoir celles restantes
+                return taskSelectionSRPT(feasibleTasks, instance);
             case LRPT:
-                return taskSelectionLRPT(feasibleTasks, realisees, instance);
+                return taskSelectionLRPT(feasibleTasks, instance);
             case EST_LRPT:
-                return taskSelectionESTLRPT(feasibleTasks, realisees, instance);
+                return taskSelectionESTLRPT(feasibleTasks, instance);
             default:
                 return feasibleTasks.get(0);
         }
@@ -122,58 +116,37 @@ public class GreedySolver implements Solver {
         return taskMax;
     }
 
-    private Task taskSelectionSRPT(ArrayList<Task> feasibleTasks, ArrayList<Task> realisees, Instance instance){
+    // on regarde toutes les taches apres celle en cours
+    private int remainingTime(Task task, Instance instance){
+        int duree = 0;
+        for(int t = task.task; t < instance.numTasks; t++){
+            duree += instance.duration(task.job,t);
+        }
+        return duree;
+    }
+
+    private Task taskSelectionSRPT(ArrayList<Task> feasibleTasks, Instance instance){
         //somme des durees des taches restantes du job
         int min = Integer.MAX_VALUE;
-        int dureeJob = 0;
-        int job = -1;
         Task taskMin = null;
-        //recherche du job avec la plus petite duree de taches restantes
+        //recherche de la tache avec la plus petite duree de taches restantes
         for (Task task : feasibleTasks){
-            int j = task.job;
-            for (int t = 0; t < instance.numTasks; t++){
-                if (!realisees.contains(new Task(j,t))){ //tache non realisee = restante
-                    dureeJob += instance.duration(j,t);
-                }
-            }
-            if (dureeJob != 0 && dureeJob < min){
-                min = dureeJob;
-                dureeJob = 0;
-                job = j;
-            }
-        }
-        for (Task t : feasibleTasks){
-            if (t.job == job) {
-                taskMin = t;
-                break;
+            if (remainingTime(task,instance) < min){
+                min = remainingTime(task,instance);
+                taskMin = new Task(task.job,task.task);
             }
         }
         return taskMin;
     }
-    private Task taskSelectionLRPT(ArrayList<Task> feasibleTasks, ArrayList<Task> realisees, Instance instance){
+    private Task taskSelectionLRPT(ArrayList<Task> feasibleTasks, Instance instance){
         //somme des durees des taches restantes du job
         int max = Integer.MIN_VALUE;
-        int dureeJob = 0;
-        int job = -1;
         Task taskMax = null;
-        //recherche du job avec la plus petite duree de taches restantes
+        //recherche de la tache avec la plus grande duree de taches restantes
         for (Task task : feasibleTasks){
-            int j = task.job;
-            for (int t = 0; t < instance.numTasks; t++){
-                if (!realisees.contains(new Task(j,t))){ //tache non realisee = restante
-                    dureeJob += instance.duration(j,t);
-                }
-            }
-            if (dureeJob != 0 && dureeJob > max){
-                max = dureeJob;
-                dureeJob = 0;
-                job = j;
-            }
-        }
-        for (Task t : feasibleTasks){
-            if (t.job == job) {
-                taskMax = t;
-                break;
+            if (remainingTime(task,instance) > max){
+                max = remainingTime(task,instance);
+                taskMax = new Task(task.job,task.task);
             }
         }
         return taskMax;
@@ -183,8 +156,8 @@ public class GreedySolver implements Solver {
         return taskSelectionSPT(estTasks(feasibleTasks,instance), instance);
     }
 
-    private Task taskSelectionESTLRPT(ArrayList<Task> feasibleTasks, ArrayList<Task> realisees, Instance instance){
-        return taskSelectionLRPT(estTasks(feasibleTasks,instance), realisees, instance);
+    private Task taskSelectionESTLRPT(ArrayList<Task> feasibleTasks, Instance instance){
+        return taskSelectionLRPT(estTasks(feasibleTasks,instance), instance);
     }
 
     //renvoie les taches realisables avec le plus petit est

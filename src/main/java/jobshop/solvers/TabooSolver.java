@@ -93,11 +93,4 @@ public class TabooSolver implements Solver {
         return sched.makespan();
     }
 
-    private boolean isTaboo(Voisinage.Swap swap, int iter, int [][] solutionsTaboo){
-        if(solutionsTaboo[swap.t1][swap.t2] < iter){
-            return true;
-        }else{
-            return false;
-        }
-    }
 }
