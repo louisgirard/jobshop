@@ -3,6 +3,7 @@ package jobshop;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +31,11 @@ public class Main {
         solvers.put("est_spt", new GreedySolver(GreedySolver.Priority.EST_SPT));
         solvers.put("est_lrpt", new GreedySolver(GreedySolver.Priority.EST_LRPT));
         solvers.put("descent", new DescentSolver());
-        solvers.put("taboo", new TabooSolver(4,4));
+        solvers.put("taboo1", new TabooSolver(1,0));
+        solvers.put("taboo10", new TabooSolver(10,0));
+        solvers.put("taboo50", new TabooSolver(50,0));
+        solvers.put("taboo100", new TabooSolver(100,0));
+        solvers.put("taboo200", new TabooSolver(200,0));
         // add new solvers here
     }
 
@@ -76,13 +81,25 @@ public class Main {
             }
         }
         List<String> instances = ns.<String>getList("instance");
+        List<String> instancesCorrect = new ArrayList<String>();
+        instancesCorrect.addAll(instances);
         for(String instanceName : instances) {
             if(!BestKnownResult.isKnown(instanceName)) {
-                System.err.println("ERROR: instance \"" + instanceName + "\" is not avalaible.");
-                System.err.println("       available instances: " + Arrays.toString(BestKnownResult.instances));
-                System.exit(1);
+                if(instanceName.equals("ft") || instanceName.equals("la") ){
+                    instancesCorrect.remove(instanceName);
+                    for(String instance : BestKnownResult.instances){
+                        if(instance.startsWith(instanceName)){
+                            instancesCorrect.add(instance);
+                        }
+                    }
+                }else{
+                    System.err.println("ERROR: instance \"" + instanceName + "\" is not avalaible.");
+                    System.err.println("       available instances: " + Arrays.toString(BestKnownResult.instances));
+                    System.exit(1);
+                }
             }
         }
+        instances = instancesCorrect;
 
         float[] runtimes = new float[solversToTest.size()];
         float[] distances = new float[solversToTest.size()];
@@ -140,6 +157,26 @@ public class Main {
             output.printf("%7.1f %8s %5.1f        ", runtimes[solverId], "-", distances[solverId]);
         }
 
+
+        // affichage pour graphiques
+        System.out.println("");
+
+//        for (int solverId = 0; solverId < solversToTest.size(); solverId++) {
+//            System.out.println("---------------------------------");
+//            String solverName = solversToTest.get(solverId);
+//            Solver solver = solvers.get(solverName);
+//            System.out.println(solverName);
+//            for(String instanceName : instances) {
+//                int bestKnown = BestKnownResult.of(instanceName);
+//                Path path = Paths.get("instances/", instanceName);
+//                Instance instance = Instance.fromFile(path);
+//                long deadline = System.currentTimeMillis() + solveTimeMs;
+//                Result result = solver.solve(instance, deadline);
+//                assert result.schedule.isValid();
+//                int makespan = result.schedule.makespan();
+//                System.out.println(makespan);
+//            }
+//        }
 
 
         } catch (Exception e) {

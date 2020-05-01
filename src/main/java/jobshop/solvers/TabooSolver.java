@@ -5,9 +5,6 @@ import jobshop.Result;
 import jobshop.Schedule;
 import jobshop.Solver;
 import jobshop.encodings.ResourceOrder;
-import jobshop.encodings.Task;
-
-import java.util.HashMap;
 import java.util.List;
 
 public class TabooSolver implements Solver {
@@ -33,56 +30,51 @@ public class TabooSolver implements Solver {
      * m2,t3      0       0       0       0       0       0
      */
 
+
     @Override
     public Result solve(Instance instance, long deadline) {
         //Init
         Schedule bestSolution = new GreedySolver(GreedySolver.Priority.SPT).solve(instance,deadline).schedule;
+        Schedule currentSolution = bestSolution;
         int k = 0;
-        long timerStart = System.currentTimeMillis();
         //matrice de taches, ligne + colonne = permutation
         int [][] solutionsTaboo = new int [instance.numJobs * instance.numTasks][instance.numJobs * instance.numTasks];
 
-        List<Voisinage.Block> blocks = Voisinage.blocksOfCriticalPath(new ResourceOrder(bestSolution));
-        ResourceOrder bestVoisin = null;
-        Voisinage.Swap bestSwap = null; // enregistre le swap du meilleur voisin pour ajouter son opposé dans taboo
-        //Boucle
-        //recherche du meilleur voisin
-        for(Voisinage.Block b : blocks){
-            List<Voisinage.Swap> voisins = Voisinage.neighbors(b);
+        while ((deadline - System.currentTimeMillis() > 1) && (k < maxIter)) {
             k++;
-            for(Voisinage.Swap swap : voisins){
-                // voisin de la meilleure solution
-                ResourceOrder voisin = new ResourceOrder(bestSolution);
-                // is not taboo?
-                if(solutionsTaboo[swap.t1 + instance.numTasks * swap.machine][swap.t2 + instance.numTasks * swap.machine] < k){
-                    swap.applyOn(voisin);
-                    Schedule voisinSched = voisin.toSchedule();
-                    // si l'objectif est meilleur
-                    if(bestVoisin == null){
-                        bestVoisin = voisin.copy();
-                        bestSwap = new Voisinage.Swap(swap.machine,swap.t1,swap.t2);
-                    }else{
-                        if(voisinSched != null && obj(voisinSched) < obj(bestVoisin)){
+            List<Voisinage.Block> blocks = Voisinage.blocksOfCriticalPath(new ResourceOrder(currentSolution));
+            ResourceOrder bestVoisin = null;
+            Voisinage.Swap bestSwap = null; // enregistre le swap du meilleur voisin pour ajouter son opposé dans taboo
+            //Boucle
+            //recherche du meilleur voisin
+            for (Voisinage.Block b : blocks) {
+                List<Voisinage.Swap> voisins = Voisinage.neighbors(b);
+                for (Voisinage.Swap swap : voisins) {
+                    // voisin de la meilleure solution
+                    ResourceOrder voisin = new ResourceOrder(currentSolution);
+                    // is not taboo?
+                    if (solutionsTaboo[swap.t1 + instance.numJobs * swap.machine][swap.t2 + instance.numJobs * swap.machine] < k) {
+                        swap.applyOn(voisin);
+                        Schedule voisinSched = voisin.toSchedule();
+                        // si l'objectif est meilleur
+                        if (bestVoisin == null || (voisinSched != null && obj(voisinSched) < obj(bestVoisin))) {
                             bestVoisin = voisin.copy();
-                            bestSwap = new Voisinage.Swap(swap.machine,swap.t1,swap.t2);
+                            bestSwap = new Voisinage.Swap(swap.machine, swap.t1, swap.t2);
                         }
                     }
                 }
             }
             // fin de parcours des voisins, on a le meilleur
             //ajout dans taboo
-            solutionsTaboo[bestSwap.t2 + instance.numTasks * bestSwap.machine][bestSwap.t1 + instance.numTasks * bestSwap.machine] = k + dureeTaboo;
+            solutionsTaboo[bestSwap.t2 + instance.numJobs * bestSwap.machine][bestSwap.t1 + instance.numJobs * bestSwap.machine] = k + dureeTaboo;
+            currentSolution = bestVoisin.toSchedule();
             //regarde si ameliorant
-            if(obj(bestVoisin) < obj(bestSolution)){
+            if (obj(bestVoisin) < obj(bestSolution)) {
                 bestSolution = bestVoisin.toSchedule();
-                bestVoisin = null;
-            }
-            // max iter depassee ou timeout
-            if((k >= maxIter) || (System.currentTimeMillis() > (timerStart + deadline))){
-                break;
             }
         }
         return new Result(instance, bestSolution, Result.ExitCause.Timeout);
+
     }
 
     private int obj(ResourceOrder order){

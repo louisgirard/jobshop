@@ -70,6 +70,7 @@ public class DebuggingMain {
             */
 
             // TEST SOLVEUR
+
             System.out.println("----------Test Taboo Solver----------");
             Instance instance1 = Instance.fromFile(Paths.get("instances/ft20"));
             TabooSolver tabooSolver = new TabooSolver(50, 5);
@@ -81,6 +82,16 @@ public class DebuggingMain {
             System.out.println("makespan: " + result.schedule.makespan());
             System.out.println("Temps exec : " + (System.currentTimeMillis()-debut));
 
+
+            Instance instance = Instance.fromFile(Paths.get("instances/ft06"));
+            int res = 0;
+            for (int j = 0 ; j < instance.numJobs ; j++){
+                for (int t = 0; t < instance.numTasks; t++){
+                    res += instance.duration(j,t);
+                }
+            }
+            System.out.println(res);
+            System.out.println("n : " + instance.numJobs + ", m : " + instance.numMachines);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
