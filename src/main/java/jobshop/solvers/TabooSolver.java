@@ -34,7 +34,7 @@ public class TabooSolver implements Solver {
     @Override
     public Result solve(Instance instance, long deadline) {
         //Init
-        Schedule bestSolution = new GreedySolver(GreedySolver.Priority.SPT).solve(instance,deadline).schedule;
+        Schedule bestSolution = new GreedySolver(GreedySolver.Priority.EST_LRPT).solve(instance,deadline).schedule;
         Schedule currentSolution = bestSolution;
         int k = 0;
         //matrice de taches, ligne + colonne = permutation

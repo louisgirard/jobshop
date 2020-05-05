@@ -34,8 +34,17 @@ public class Main {
         solvers.put("taboo1", new TabooSolver(1,0));
         solvers.put("taboo10", new TabooSolver(10,0));
         solvers.put("taboo50", new TabooSolver(50,0));
+        solvers.put("taboo50-10", new TabooSolver(50,10));
+        solvers.put("taboo50-20", new TabooSolver(50,20));
         solvers.put("taboo100", new TabooSolver(100,0));
+        solvers.put("taboo100-10", new TabooSolver(100,10));
+        solvers.put("taboo100-20", new TabooSolver(100,20));
+        solvers.put("taboo100-50", new TabooSolver(100,50));
         solvers.put("taboo200", new TabooSolver(200,0));
+        solvers.put("taboo200-10", new TabooSolver(200,10));
+        solvers.put("taboo200-20", new TabooSolver(200,20));
+        solvers.put("taboo200-50", new TabooSolver(200,50));
+        solvers.put("taboo1000-50", new TabooSolver(1000,50));
         // add new solvers here
     }
 
@@ -167,7 +176,6 @@ public class Main {
 //            Solver solver = solvers.get(solverName);
 //            System.out.println(solverName);
 //            for(String instanceName : instances) {
-//                int bestKnown = BestKnownResult.of(instanceName);
 //                Path path = Paths.get("instances/", instanceName);
 //                Instance instance = Instance.fromFile(path);
 //                long deadline = System.currentTimeMillis() + solveTimeMs;
